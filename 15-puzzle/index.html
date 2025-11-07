@@ -4,70 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>15-Puzzle</title>
-    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Load Custom Stylesheet -->
+    <!-- This game uses a separate stylesheet for grid logic -->
     <link rel="stylesheet" href="style.css">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Prevent flash of unstyled content */
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8 w-full max-w-md">
+    <!-- Main Game Content -->
+    <div class="w-full max-w-md mx-auto">
+        <h1 class="text-4xl font-bold text-white text-center mb-6">15-Puzzle</h1>
         
-        <header class="text-center mb-4">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">15-Puzzle</h1>
-            <p class="text-lg text-blue-300">Get the tiles in order!</p>
-        </header>
-
-        <!-- Game Stats -->
-        <div class="flex justify-between bg-gray-900 rounded-lg p-4 mb-4 text-center">
-            <div class="text-lg">
-                Moves: <span id="moves-count" class="font-bold text-xl text-white">0</span>
+        <!-- Stats Bar -->
+        <div class="flex justify-between items-center bg-gray-800 rounded-lg p-4 mb-4 shadow-lg">
+            <div class="text-center">
+                <div class="text-sm font-medium text-blue-300">MOVES</div>
+                <div id="moves-count" class="text-2xl font-bold text-white">0</div>
             </div>
-            <div class="text-lg">
-                Time: <span id="timer" class="font-bold text-xl text-white">00:00</span>
+            <div class="text-center">
+                <div class="text-sm font-medium text-blue-300">TIME</div>
+                <div id="timer" class="text-2xl font-bold text-white">00:00</div>
             </div>
-        </div>
-
-        <!-- Game Board -->
-        <div id="game-board" class="game-board mb-4">
-            <!-- Tiles will be dynamically injected here by script.js -->
-        </div>
-
-        <!-- Controls -->
-        <div class="flex justify-center">
-            <button id="new-game-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg text-lg">
+            <button id="new-game-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all transform hover:scale-105">
                 New Game
             </button>
         </div>
 
-    </div> <!-- /main card -->
+        <!-- The Game Board (Grid) -->
+        <!-- The style.css file controls the grid layout -->
+        <div id="game-board" class="game-board shadow-2xl relative">
+            <!-- Tiles will be dynamically generated here -->
+        </div>
 
-    <!-- Win Message Overlay -->
-    <div id="win-overlay" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4">
-        <div class="bg-gray-800 shadow-2xl rounded-2xl p-8 text-center max-w-sm w-full">
-            <h2 class="text-3xl font-bold text-emerald-400 mb-4">You Win!</h2>
-            <div class="text-lg text-gray-200 space-y-2 mb-6">
-                <p>Your Time: <span id="win-time" class="font-bold text-white">00:00</span></p>
-                <p>Total Moves: <span id="win-moves" class="font-bold text-white">0</span></p>
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="../index.html" class="text-blue-400 hover:text-blue-300 transition-colors">&larr; Back to Heuristic Hub</a>
+        </div>
+    </div>
+
+    <!-- Win Overlay -->
+    <div id="win-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 shadow-2xl rounded-2xl p-8 text-center w-full max-w-sm border-2 border-emerald-500">
+            <h2 class="text-4xl font-bold text-emerald-400 mb-6">You Win!</h2>
+            <div class="flex justify-around mb-8">
+                <div class="text-center">
+                    <div class="text-sm font-medium text-gray-300">TIME</div>
+                    <div id="win-time" class="text-3xl font-bold text-white">00:00</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm font-medium text-gray-300">MOVES</div>
+                    <div id="win-moves" class="text-3xl font-bold text-white">0</div>
+                </div>
             </div>
-            <button id="win-new-game-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg text-lg">
+            <button id="win-new-game-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg text-lg transition-all transform hover:scale-105">
                 Play Again
             </button>
         </div>
     </div>
 
-    <!-- 'defer' ensures it runs after the HTML is parsed -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- Your Firebase Config (using your new filename, relative path) -->
+    <script src="../FirebaseConfig.js"></script>
+    
+    <!-- This path is correct, relative to this folder -->
     <script src="script.js" defer></script>
 </body>
 </html>

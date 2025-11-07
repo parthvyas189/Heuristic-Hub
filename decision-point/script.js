@@ -1,75 +1,59 @@
 // Wait for the DOM to be fully loaded before running the script
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- DOM Elements ---
+
+    // =================================================================
+    // == DOM ELEMENTS
+    // =================================================================
     const tileGrid = document.getElementById('tile-grid');
-    const statusBar = document.getElementById('status-bar');
-    const statsBar = document.getElementById('stats-bar');
+    const statusText = document.getElementById('status-text');
+    const tilesRemainingText = document.getElementById('tiles-remaining');
     const btnAccept = document.getElementById('btn-accept');
     const btnReject = document.getElementById('btn-reject');
     const btnNewGame = document.getElementById('btn-new-game');
 
-    // --- Game Constants ---
-    const TOTAL_TILES = 30;
-    
-    // --- Game State ---
-    let tiles = []; // Array of { id, value, element, state: 'hidden'|'revealed'|'rejected'|'accepted' }
+    // =================================================================
+    // == GAME STATE
+    // =================================================================
+    let tiles = []; // { id, value, element, state: 'hidden'|'revealed'|'rejected'|'accepted' }
     let gameover = false;
     let ACTUAL_BEST_VALUE = 0;
     let tilesRevealedCount = 0;
     let currentDecisionTileId = -1; // The ID of the tile we are currently deciding on
-    
-    // --- Tailwind Class Definitions ---
-    // We define all our styles here, using only Tailwind classes
-    const TILE_BASE = [
-        'flex', 'items-center', 'justify-center', 
-        'text-xl', 'font-semibold', 'rounded-lg', 
-        'transition-all', 'duration-300', 'ease-in-out',
-        'aspect-square', 'min-h-[50px]', 'border-2'
-    ];
 
-    const TILE_STATE = {
-        hidden: [
-            'bg-gray-700', 'text-transparent', 'border-gray-600', 
-            'cursor-pointer', 'hover:border-emerald-300'
-        ],
-        revealed: [
-            'bg-gray-800', 'text-gray-100', 'border-gray-500',
-            'scale-110', 'shadow-[0_0_15px_rgba(59,130,246,0.4)]', // shadow-blue-500
-            'cursor-default'
-        ],
-        rejected: [
-            'bg-gray-800', 'text-gray-500', 'border-gray-600',
-            'border-dashed', 'opacity-60', 'cursor-default'
-        ],
-        accepted: [
-            'bg-emerald-500', 'text-white', 'border-white',
-            'scale-110', 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', // shadow-emerald
-            'cursor-default'
-        ],
-        best: [
-            'bg-amber-500', 'text-gray-800', 'border-white',
-            'shadow-[0_0_20px_rgba(245,158,11,0.7)]', // shadow-amber
-            'cursor-default'
-        ]
-    };
-
+    // =================================================================
+    // == FIREBASE STATE
+    // =================================================================
+    let currentUser = null;
+    let userEmail = null; // We'll store this to save with the score
 
     /**
-     * Initializes or resets the game.
+     * Updates the status message on the UI.
+     * @param {string} message - The text to display.
+     * @param {string} [colorClass='text-blue-400'] - The Tailwind color class.
+     */
+    function updateStatus(message, colorClass = 'text-blue-400') {
+        statusText.textContent = message;
+        // Remove old colors, add new one
+        statusText.classList.remove('text-blue-400', 'text-green-400', 'text-red-400', 'text-gray-400', 'text-yellow-400');
+        statusText.classList.add(colorClass);
+    }
+
+    /**
+     * Initializes or resets the game board.
      */
     function initGame() {
+        console.log("Initializing game...");
         // Reset state
-        ACTUAL_BEST_VALUE = 0;
         gameover = false;
         tiles = [];
+        ACTUAL_BEST_VALUE = 0;
         tilesRevealedCount = 0;
         currentDecisionTileId = -1;
 
         // Create tile values with random, unknown numbers
         const tileValues = [];
-        for (let i = 0; i < TOTAL_TILES; i++) {
-            const val = Math.floor(Math.random() * 900) + 100;
+        for (let i = 0; i < 30; i++) {
+            const val = Math.floor(Math.random() * 900) + 100; // 3-digit numbers
             tileValues.push(val);
             if (val > ACTUAL_BEST_VALUE) {
                 ACTUAL_BEST_VALUE = val; // Find the true max
@@ -78,19 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Setup UI
         tileGrid.innerHTML = '';
-        for (let i = 0; i < TOTAL_TILES; i++) {
+        for (let i = 0; i < 30; i++) {
             const tileElement = document.createElement('div');
-            
-            // Apply base styles and initial hidden state from Tailwind
-            tileElement.classList.add(...TILE_BASE, ...TILE_STATE.hidden);
-            
+            // *** THIS WAS THE BUG ***
+            // We no longer add 'hidden' here. We use Tailwind classes only.
+            tileElement.className = 'tile w-full aspect-square bg-gray-700 rounded-lg cursor-pointer hover:border-2 hover:border-blue-400';
             tileElement.dataset.tileId = i; // Give it an ID
             
             const tileData = {
                 id: i,
                 value: tileValues[i],
                 element: tileElement,
-                state: 'hidden'
+                state: 'hidden' // This is our *internal* state
             };
             
             // Add click listener
@@ -106,8 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNewGame.classList.add('hidden');
         
         // Set initial status
-        updateStats();
-        updateStatus(`Click any tile to begin.`);
+        tilesRemainingText.textContent = '30 tiles remaining.';
+        // The auth listener will update the status text (e.g., "Logged in.")
+        if (currentUser) {
+            updateStatus('Logged in. Click any tile to begin.', 'text-green-400');
+        } else {
+            updateStatus('Click any tile to begin.', 'text-blue-400');
+        }
     }
 
     /**
@@ -122,13 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Reveal the tile ---
         tilesRevealedCount++;
-        tileData.element.textContent = tileData.value;
+        tileData.state = 'revealed'; // Mark internal state
         
-        // Every tile click immediately forces a decision
-        tileData.state = 'revealed';
-        // Apply 'revealed' styles
-        tileData.element.classList.remove(...TILE_STATE.hidden);
-        tileData.element.classList.add(...TILE_STATE.revealed);
+        // Update element classes
+        tileData.element.textContent = tileData.value;
+        tileData.element.className = 'tile w-full aspect-square bg-blue-500 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg scale-110 z-10';
         
         currentDecisionTileId = tileData.id;
         
@@ -136,16 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAccept.classList.remove('hidden');
         btnReject.classList.remove('hidden');
         
-        updateStatus(`You found ${tileData.value}. Accept or Reject?`);
+        updateStatus(`You found ${tileData.value}. Accept or Reject?`, 'text-yellow-400');
+        tilesRemainingText.textContent = `${30 - tilesRevealedCount} tiles remaining.`;
 
         // Force decision on the last tile
-        if (tilesRevealedCount === TOTAL_TILES) {
-            updateStatus(`Last tile! You must accept.`);
+        if (tilesRevealedCount === 30) {
+            updateStatus(`Last tile! You must accept ${tileData.value}.`, 'text-yellow-400');
             btnReject.classList.add('hidden'); // Can't reject
             // Auto-accept
             setTimeout(() => handleAccept(true), 800);
         }
-        updateStats();
     }
 
     /**
@@ -157,16 +143,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const tileData = tiles.find(t => t.id === currentDecisionTileId);
         
         tileData.state = 'rejected';
-        // Apply 'rejected' styles
-        tileData.element.classList.remove(...TILE_STATE.revealed);
-        tileData.element.classList.add(...TILE_STATE.rejected);
+        // Update element classes
+        tileData.element.className = 'tile w-full aspect-square bg-gray-800 rounded-lg flex items-center justify-center text-lg font-bold text-gray-500 opacity-50 cursor-not-allowed';
 
         // Hide buttons, reset decision state
         btnAccept.classList.add('hidden');
         btnReject.classList.add('hidden');
         currentDecisionTileId = -1;
         
-        updateStatus(`Click another tile.`);
+        updateStatus('Tile rejected. Keep looking...', 'text-blue-400');
     }
 
     /**
@@ -194,29 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Updates the statistics bar.
-     */
-    function updateStats() {
-        const remaining = TOTAL_TILES - tilesRevealedCount;
-        statsBar.textContent = `${remaining} tiles remaining.`;
-    }
-
-    /**
-     * Updates the status message with a fade-in animation.
-     */
-    function updateStatus(message, colorClass = 'text-blue-400') {
-        statusBar.textContent = message;
-        // Apply animation
-        statusBar.classList.remove('fade-in');
-        // Set text color, remove old ones
-        statusBar.classList.remove('text-blue-400', 'text-green-400', 'text-red-400');
-        statusBar.classList.add(colorClass);
-        // Trigger reflow to restart animation
-        void statusBar.offsetWidth; 
-        statusBar.classList.add('fade-in');
-    }
-
-    /**
      * Finalizes the game after a selection is made.
      * @param {object} chosenTile - The tileData object the player accepted.
      */
@@ -225,14 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const playerChoice = chosenTile.value;
         chosenTile.state = 'accepted';
-        // Apply 'accepted' styles
-        if (chosenTile.element.classList.contains('revealed')) {
-             chosenTile.element.classList.remove(...TILE_STATE.revealed);
-        }
-        chosenTile.element.classList.add(...TILE_STATE.accepted);
+        
+        const didWin = playerChoice === ACTUAL_BEST_VALUE;
+
+        // Style the chosen tile
+        chosenTile.element.className = `tile w-full aspect-square rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg scale-110 z-10 ${didWin ? 'bg-green-500' : 'bg-red-500'}`;
+
 
         // Check for win
-        if (playerChoice === ACTUAL_BEST_VALUE) {
+        if (didWin) {
             updateStatus(`You Win! You found the best tile: ${ACTUAL_BEST_VALUE}!`, 'text-green-400');
         } else {
             updateStatus(`You Lost. You picked ${playerChoice}. The best was ${ACTUAL_BEST_VALUE}.`, 'text-red-400');
@@ -246,6 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btnReject.classList.add('hidden');
         btnNewGame.classList.remove('hidden');
         btnNewGame.focus();
+
+        // --- Save to Firebase ---
+        if (currentUser) {
+            saveScore(playerChoice, didWin);
+        } else {
+            console.log("No user logged in. Score not saved.");
+        }
     }
 
     /**
@@ -255,32 +225,83 @@ document.addEventListener('DOMContentLoaded', () => {
         for(const tile of tiles) {
             if (tile.id === chosenTileId) continue; // Skip the one already styled
 
+            // Reset classes
+            tile.element.className = 'tile w-full aspect-square rounded-lg flex items-center justify-center text-lg font-bold';
+
             if (tile.value === ACTUAL_BEST_VALUE) {
                 // This is the one they missed
-                // Apply 'best' styles
-                if(tile.state === 'hidden') tile.element.classList.remove(...TILE_STATE.hidden);
-                if(tile.state === 'rejected') tile.element.classList.remove(...TILE_STATE.rejected);
-                // Ensure no conflicting styles
-                tile.element.classList.remove(...TILE_STATE.accepted, ...TILE_STATE.revealed); 
-                tile.element.classList.add(...TILE_STATE.best);
+                tile.element.classList.add('bg-yellow-500', 'text-gray-900');
                 tile.element.textContent = tile.value;
             }
-
-            // Reveal any other hidden tiles
-            if (tile.state === 'hidden') {
-                // Apply 'rejected' styles to un-clicked tiles
-                tile.element.classList.remove(...TILE_STATE.hidden);
-                tile.element.classList.add(...TILE_STATE.rejected); 
+            else if (tile.state === 'hidden') {
+                // Reveal any other hidden tiles
+                tile.element.classList.add('bg-gray-800', 'text-gray-500', 'opacity-50');
                 tile.element.textContent = tile.value;
             }
         }
     }
 
-    // --- Event Listeners ---
+    /**
+     * Saves the game result to Firestore.
+     * @param {number} score - The score the player achieved.
+     * @param {boolean} didWin - Whether the player won or not.
+     */
+    function saveScore(score, didWin) {
+        if (!currentUser || !db) {
+            console.error("Firebase not initialized or user not logged in.");
+            return;
+        }
+
+        db.collection('scores').add({
+            game: 'decisionPoint',
+            userId: currentUser.uid,
+            userEmail: userEmail, // Use the stored email
+            score: score,
+            didWin: didWin,
+            bestTile: ACTUAL_BEST_VALUE,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then((docRef) => {
+            console.log("Score saved with ID: ", docRef.id);
+        })
+        .catch((error) => {
+            console.error("Error saving score: ", error);
+        });
+    }
+    
+    // =================================================================
+    // == INITIALIZATION & EVENT LISTENERS
+    // =================================================================
+
+    // --- Firebase Auth Listener ---
+    // This is the new entry point.
+    // We wait for Firebase to tell us if we are logged in.
+    // =================================================================
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // User is signed in
+            currentUser = user;
+            userEmail = user.email; // Store this for saving scores
+            console.log("User logged in:", user.email);
+            // We call initGame() *after* we know the user's state
+            initGame();
+            updateStatus('Logged in. Click any tile to begin.', 'text-green-400');
+        } else {
+            // User is signed out
+            currentUser = null;
+            userEmail = null;
+            console.log("User logged out.");
+            // We still call initGame() so non-logged-in users can play
+            initGame();
+            updateStatus('Click any tile to begin.', 'text-blue-400');
+        }
+        
+        // Show the page now that auth is checked and game is ready
+        document.body.style.display = 'flex';
+    });
+    
+    // --- Button Listeners ---
     btnReject.addEventListener('click', handleReject);
     btnAccept.addEventListener('click', () => handleAccept(false));
     btnNewGame.addEventListener('click', initGame);
-
-    // --- Start Game ---
-    initGame();
 });

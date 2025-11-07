@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logic Lab</title>
-    <!-- Load Inter font -->
+    <!-- Use your new project name -->
+    <title>Heuristic Hub</title> 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -23,36 +22,85 @@
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-2xl text-center">
-        <h1 class="text-5xl md:text-6xl font-bold text-white mb-4">Logic Lab</h1>
-        <p class="text-xl md:text-2xl text-blue-300 mb-12">A collection of games to test your strategy and skill.</p>
+    <div class="w-full max-w-4xl mx-auto">
+        
+        <!-- Auth Links -->
+        <div id="auth-links" class="absolute top-4 right-4 text-lg">
+            <!-- This part will be controlled by auth-status.js -->
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
-            <!-- Decision Point Card -->
-            <a href="./decision-point/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
-                <h2 class="text-3xl font-bold text-white mb-3">Decision Point</h2>
-                <p class="text-lg text-gray-400 mb-6">Can you find the highest score? A game of probability and optimal stopping.</p>
-                <div class="text-right">
-                    <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
-                        Play Game
-                    </span>
-                </div>
-            </a>
+        <div class="text-center">
+            <!-- Use your new project name -->
+            <h1 class="text-5xl md:text-6xl font-bold text-white mb-4">Heuristic Hub</h1>
+            <p class="text-xl md:text-2xl text-blue-300 mb-12">A collection of games to test your strategy and skill.</p>
 
-            <!-- 15-Puzzle Card -->
-            <a href="./15-puzzle/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
-                <h2 class="text-3xl font-bold text-white mb-3">15-Puzzle</h2>
-                <p class="text-lg text-gray-400 mb-6">The classic sliding puzzle. Arrange the tiles in order as fast as you can.</p>
-                <div class="text-right">
-                    <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
-                        Play Game
-                    </span>
-                </div>
-            </a>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- Decision Point Card -->
+                <a href="./decision-point/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
+                    <h2 class="text-3xl font-bold text-white mb-3">Decision Point</h2>
+                    <p class="text-lg text-gray-400 mb-6">Can you find the highest score? A game of probability and optimal stopping.</p>
+                    <div class="text-right">
+                        <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            Play Game
+                        </span>
+                    </div>
+                </a>
 
+                <!-- 15-Puzzle Card -->
+                <a href="./15-puzzle/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
+                    <h2 class="text-3xl font-bold text-white mb-3">15-Puzzle</h2>
+                    <p class="text-lg text-gray-400 mb-6">The classic sliding puzzle. Arrange the tiles in order as fast as you can.</p>
+                    <div class="text-right">
+                        <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            Play Game
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Leaderboard Link -->
+            <div class="mt-12">
+                <!-- Use your new filename -->
+                <a href="./Leaderboard.html" class="text-2xl font-semibold text-white bg-gray-700 hover:bg-gray-600 py-3 px-8 rounded-lg transition duration-200">
+                    View Leaderboards
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    
+    <!-- Your Firebase Config (using your new filename) -->
+    <script src="./FirebaseConfig.js"></script>
+    
+    <!-- NEW: Script to show "Login" or "Logout" -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const authLinks = document.getElementById('auth-links');
+            
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in
+                    authLinks.innerHTML = `
+                        <span class="text-gray-300 mr-4">Hi, ${user.email.split('@')[0]}</span>
+                        <a href="#" id="btn-logout" class="font-semibold text-blue-400 hover:text-blue-300">Logout</a>
+                    `;
+                    // Add logout functionality
+                    document.getElementById('btn-logout').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        auth.signOut();
+                    });
+                } else {
+                    // User is signed out
+                    authLinks.innerHTML = `
+                        <a href="./AuthPage.html" class="font-semibold text-blue-400 hover:text-blue-300">Login</a>
+                    `;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

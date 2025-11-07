@@ -4,63 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decision Point</title>
-    
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- *** THIS IS THE FIX *** -->
+    <!-- Add the Tailwind safelist config -->
+    <script>
+        tailwind.config = {
+            safelist: [
+                'bg-blue-500',
+                'hover:bg-blue-400',
+                'bg-green-500',
+                'bg-red-500',
+                'opacity-50',
+                'text-blue-400',
+                'text-green-400',
+                'text-red-400',
+                'text-gray-400',
+                'text-yellow-400',
+                'aspect-square'
+            ]
+        }
+    </script>
     
     <!-- Load Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- 
-      1. This is the NEW configuration script.
-      It tells Tailwind to "safelist" the classes we will add dynamically,
-      so it knows to generate them.
-    -->
-    <script>
-        tailwind.config = {
-            safelist: [
-                'bg-gray-700',
-                'border-gray-600',
-                'hover:border-emerald-300',
-                'bg-gray-800',
-                'text-gray-100',
-                'border-gray-500',
-                'scale-110',
-                'shadow-[0_0_15px_rgba(59,130,246,0.4)]', // shadow-blue-500
-                'text-gray-500',
-                'border-dashed',
-                'opacity-60',
-                'bg-emerald-500',
-                'text-white',
-                'border-white',
-                'shadow-[0_0_20px_rgba(16,185,129,0.7)]', // shadow-emerald
-                'bg-amber-500',
-                'text-gray-800',
-                'shadow-[0_0_20px_rgba(245,158,11,0.7)]' // shadow-amber
-            ]
+    <style> 
+        body { 
+            font-family: 'Inter', sans-serif;
+            /* Prevent flash of unstyled content */
+            display: none;
         }
-    </script>
-
-    <!-- 2. Load Tailwind CSS (AFTER the config) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 3. REMOVED the link to style.css -->
-    <!-- <link rel="stylesheet" href="style.css"> -->
-
-    <!-- We add one tiny style for the fade animation, which is hard to do in Tailwind -->
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Style for the tiles */
+        .tile {
+            transition: all 0.2s ease-in-out;
         }
     </style>
-
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
@@ -74,28 +56,27 @@
 
         <!-- Status & Stats -->
         <div class="bg-gray-900 rounded-lg p-4 mb-6 text-center">
-            <div id="stats-bar" class="text-lg font-semibold text-white mb-2">30 tiles remaining</div>
-            <div id="status-bar" class="text-xl font-bold text-blue-400" style="min-height: 1.75rem;">
-                <!-- Status messages appear here -->
+            <div id="tiles-remaining" class="text-lg font-semibold text-white mb-2">30 tiles remaining.</div>
+            <div id="status-text" class="text-xl font-bold text-blue-400" style="min-height: 1.75rem;">
+                Loading...
             </div>
-            <!-- Removed the 'best-sample-bar' element -->
         </div>
 
         <!-- Tile Grid -->
-        <div id="tile-grid" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-2 sm:gap-3 mb-6">
+        <div id="tile-grid" class="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-3 mb-6">
             <!-- Tiles will be dynamically generated here -->
         </div>
 
         <!-- Controls -->
         <div id="controls" class="flex flex-col sm:flex-row justify-center items-center gap-4 h-14">
             <!-- Buttons are hidden by default and shown when needed -->
-            <button id="btn-reject" class="text-lg font-semibold bg-red-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 hidden">
+            <button id="btn-reject" class="hidden text-lg font-semibold bg-red-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-red-700 transition duration-300 transform hover:scale-105">
                 Reject
             </button>
-            <button id="btn-accept" class="text-lg font-semibold bg-green-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 hidden">
+            <button id="btn-accept" class="hidden text-lg font-semibold bg-green-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">
                 Accept
             </button>
-            <button id="btn-new-game" class="text-lg font-semibold bg-blue-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 hidden">
+            <button id="btn-new-game" class="hidden text-lg font-semibold bg-blue-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
                 New Game
             </button>
         </div>
@@ -116,10 +97,24 @@
                 </div>
             </details>
         </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <!-- Updated relative path to go back one folder -->
+            <a href="../index.html" class="text-blue-400 hover:text-blue-300 transition-colors">&larr; Back to Heuristic Hub</a>
+        </div>
+
     </div>
 
-    <!-- Link to your new script file -->
-    <!-- 'defer' ensures it runs after the HTML is parsed -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- Your Firebase Config (using your new filename, relative path) -->
+    <script src="../FirebaseConfig.js"></script>
+    
+    <!-- This path is correct, relative to this folder -->
     <script src="script.js" defer></script>
 </body>
 </html>
