@@ -3,123 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decision Point</title>
-    
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+    <title>Logic Lab</title>
     <!-- Load Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- 
-      1. This is the NEW configuration script.
-      It tells Tailwind to "safelist" the classes we will add dynamically,
-      so it knows to generate them.
-    -->
-    <script>
-        tailwind.config = {
-            safelist: [
-                'bg-gray-700',
-                'border-gray-600',
-                'hover:border-emerald-300',
-                'bg-gray-800',
-                'text-gray-100',
-                'border-gray-500',
-                'scale-110',
-                'shadow-[0_0_15px_rgba(59,130,246,0.4)]', // shadow-blue-500
-                'text-gray-500',
-                'border-dashed',
-                'opacity-60',
-                'bg-emerald-500',
-                'text-white',
-                'border-white',
-                'shadow-[0_0_20px_rgba(16,185,129,0.7)]', // shadow-emerald
-                'bg-amber-500',
-                'text-gray-800',
-                'shadow-[0_0_20px_rgba(245,158,11,0.7)]' // shadow-amber
-            ]
-        }
-    </script>
-
-    <!-- 2. Load Tailwind CSS (AFTER the config) -->
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 3. REMOVED the link to style.css -->
-    <!-- <link rel="stylesheet" href="style.css"> -->
-
-    <!-- We add one tiny style for the fade animation, which is hard to do in Tailwind -->
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .fade-in {
-            animation: fadeIn 0.5s ease;
+        .game-card {
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
     </style>
-
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8 w-full max-w-3xl">
+    <div class="w-full max-w-2xl text-center">
+        <h1 class="text-5xl md:text-6xl font-bold text-white mb-4">Logic Lab</h1>
+        <p class="text-xl md:text-2xl text-blue-300 mb-12">A collection of games to test your strategy and skill.</p>
 
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-white">Decision Point</h1>
-            <p class="text-lg text-gray-400">Can you find the highest score?</p>
-        </div>
-
-        <!-- Status & Stats -->
-        <div class="bg-gray-900 rounded-lg p-4 mb-6 text-center">
-            <div id="stats-bar" class="text-lg font-semibold text-white mb-2">30 tiles remaining</div>
-            <div id="status-bar" class="text-xl font-bold text-blue-400" style="min-height: 1.75rem;">
-                <!-- Status messages appear here -->
-            </div>
-            <!-- Removed the 'best-sample-bar' element -->
-        </div>
-
-        <!-- Tile Grid -->
-        <div id="tile-grid" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-2 sm:gap-3 mb-6">
-            <!-- Tiles will be dynamically generated here -->
-        </div>
-
-        <!-- Controls -->
-        <div id="controls" class="flex flex-col sm:flex-row justify-center items-center gap-4 h-14">
-            <!-- Buttons are hidden by default and shown when needed -->
-            <button id="btn-reject" class="text-lg font-semibold bg-red-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-red-700 transition duration-300 transform hover:scale-105 hidden">
-                Reject
-            </button>
-            <button id="btn-accept" class="text-lg font-semibold bg-green-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 hidden">
-                Accept
-            </button>
-            <button id="btn-new-game" class="text-lg font-semibold bg-blue-600 text-white w-full sm:w-48 py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105 hidden">
-                New Game
-            </button>
-        </div>
-
-        <!-- Rules Explanation -->
-        <div class="mt-8">
-            <details class="bg-gray-900 rounded-lg p-4 cursor-pointer">
-                <summary class="font-semibold text-white text-lg">How to Play</summary>
-                <div class="text-gray-300 mt-4 space-y-2">
-                    <p><strong>Goal:</strong> Select the tile with the highest number.</p>
-                    <p><strong>Rules:</strong>
-                        <ul class="list-disc list-inside ml-4">
-                            <li>Click any tile to reveal its value.</li>
-                            <li>You must then <strong class="text-green-400">Accept</strong> it (which ends the game) or <strong class="text-red-400">Reject</strong> it (and move on).</li>
-                            <li>You can never go back to a rejected tile!</li>
-                        </ul>
-                    <p><strong>Hint:</strong> Picking your first tile gives you a 1/30 (3.3%) chance to win. There is a strategy that *massively* increases your odds. Can you discover it?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Decision Point Card -->
+            <a href="./decision-point/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
+                <h2 class="text-3xl font-bold text-white mb-3">Decision Point</h2>
+                <p class="text-lg text-gray-400 mb-6">Can you find the highest score? A game of probability and optimal stopping.</p>
+                <div class="text-right">
+                    <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                        Play Game
+                    </span>
                 </div>
-            </details>
+            </a>
+
+            <!-- 15-Puzzle Card -->
+            <a href="./15-puzzle/index.html" class="game-card bg-gray-800 shadow-2xl rounded-2xl p-8 block text-left">
+                <h2 class="text-3xl font-bold text-white mb-3">15-Puzzle</h2>
+                <p class="text-lg text-gray-400 mb-6">The classic sliding puzzle. Arrange the tiles in order as fast as you can.</p>
+                <div class="text-right">
+                    <span class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                        Play Game
+                    </span>
+                </div>
+            </a>
+
         </div>
     </div>
 
-    <!-- Link to your new script file -->
-    <!-- 'defer' ensures it runs after the HTML is parsed -->
-    <script src="script.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,85 @@
+/* This stylesheet provides the specific styles for the game board
+  that are difficult to do with Tailwind, while Tailwind handles
+  the overall page layout, colors, and fonts.
+*/
+
+.game-board {
+    display: grid;
+    /* Create a 4x4 grid */
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px; /* Space between tiles */
+    padding: 8px;
+    background-color: #1f2937; /* bg-gray-800 */
+    border: 2px solid #374151; /* border-gray-700 */
+    border-radius: 8px; /* rounded-lg */
+    
+    /* This ensures the grid itself is square */
+    aspect-ratio: 1 / 1;
+}
+
+.tile {
+    /* Make tiles square */
+    aspect-ratio: 1 / 1; 
+
+    /* Center the number */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #374151; /* bg-gray-700 */
+    border: 2px solid #4b5563; /* border-gray-600 */
+    border-radius: 6px; /* rounded-md */
+    
+    font-size: 1.875rem; /* text-3xl */
+    line-height: 2.25rem;
+    font-weight: 600; /* font-semibold */
+    color: #f3f4f6; /* text-gray-100 */
+
+    /* Smooth transition for movement */
+    transition: all 0.1s ease-in-out;
+
+    /* Default state is not clickable */
+    cursor: not-allowed;
+    
+    /* Prevents user from selecting the number text */
+    user-select: none;
+}
+
+.tile.empty {
+    /* The empty tile is invisible */
+    background-color: transparent;
+    border: none;
+    cursor: default;
+}
+
+.tile.movable {
+    /* Tiles that can move */
+    cursor: pointer;
+    background-color: #4b5563; /* bg-gray-600 */
+    border-color: #6ee7b7; /* border-emerald-300 */
+}
+
+.tile.movable:hover {
+    /* Highlight on hover */
+    background-color: #525f76;
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+/* NEW: Style for tiles in the correct position */
+.tile.correct {
+    background-color: #064e3b; /* A dark emerald */
+    border-color: #047857;
+}
+
+/* NEW: Make sure correct+movable looks right */
+.tile.correct.movable {
+    background-color: #047857; /* A slightly lighter emerald */
+    border-color: #6ee7b7; /* border-emerald-300 */
+}
+
+/* NEW: Make sure correct+movable hover looks right */
+.tile.correct.movable:hover {
+    background-color: #059669; /* A bright emerald */
+}
