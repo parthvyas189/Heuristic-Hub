@@ -64,8 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tileGrid.innerHTML = '';
         for (let i = 0; i < 30; i++) {
             const tileElement = document.createElement('div');
-            // *** THIS WAS THE BUG ***
-            // We no longer add 'hidden' here. We use Tailwind classes only.
             tileElement.className = 'tile w-full aspect-square bg-gray-700 rounded-lg cursor-pointer hover:border-2 hover:border-blue-400';
             tileElement.dataset.tileId = i; // Give it an ID
             
@@ -90,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Set initial status
         tilesRemainingText.textContent = '30 tiles remaining.';
-        // The auth listener will update the status text (e.g., "Logged in.")
         if (currentUser) {
             updateStatus('Logged in. Click any tile to begin.', 'text-green-400');
         } else {
@@ -212,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Save to Firebase ---
         if (currentUser) {
-            saveScore(playerChoice, didWin);
+            // *** THIS IS THE NEW SAVE FUNCTION ***
+            saveWinLoss(didWin);
         } else {
             console.log("No user logged in. Score not saved.");
         }
@@ -242,30 +240,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Saves the game result to Firestore.
-     * @param {number} score - The score the player achieved.
+     * --- NEW FUNCTION ---
+     * Saves the game result (win/loss) to the user's document.
      * @param {boolean} didWin - Whether the player won or not.
      */
-    function saveScore(score, didWin) {
+    function saveWinLoss(didWin) {
         if (!currentUser || !db) {
             console.error("Firebase not initialized or user not logged in.");
             return;
         }
 
-        db.collection('scores').add({
-            game: 'decisionPoint',
-            userId: currentUser.uid,
-            userEmail: userEmail, // Use the stored email
-            score: score,
-            didWin: didWin,
-            bestTile: ACTUAL_BEST_VALUE,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then((docRef) => {
-            console.log("Score saved with ID: ", docRef.id);
-        })
-        .catch((error) => {
-            console.error("Error saving score: ", error);
+        const userDocRef = db.collection('users').doc(currentUser.uid);
+
+        // Use a transaction to safely update the user's stats
+        db.runTransaction((transaction) => {
+            return transaction.get(userDocRef).then((userDoc) => {
+                if (!userDoc.exists) {
+                    throw "User document does not exist!";
+                }
+
+                // Get current stats, defaulting to 0 if they don't exist
+                const oldWins = userDoc.data().dp_wins || 0;
+                const oldLosses = userDoc.data().dp_losses || 0;
+                const oldTotal = userDoc.data().dp_total_games || 0;
+
+                // Calculate new stats
+                const newWins = oldWins + (didWin ? 1 : 0);
+                const newLosses = oldLosses + (didWin ? 0 : 1);
+                const newTotal = oldTotal + 1;
+                const newWinRate = (newWins / newTotal) * 100;
+
+                // Update the document
+                transaction.update(userDocRef, {
+                    dp_wins: newWins,
+                    dp_losses: newLosses,
+                    dp_total_games: newTotal,
+                    dp_win_rate: newWinRate
+                });
+            });
+        }).then(() => {
+            console.log("Win/Loss stats updated successfully!");
+        }).catch((error) => {
+            console.error("Transaction failed: ", error);
         });
     }
     
@@ -274,26 +290,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================
 
     // --- Firebase Auth Listener ---
-    // This is the new entry point.
-    // We wait for Firebase to tell us if we are logged in.
-    // =================================================================
     auth.onAuthStateChanged((user) => {
         if (user) {
             // User is signed in
             currentUser = user;
-            userEmail = user.email; // Store this for saving scores
+            userEmail = user.email; // Store this just in case
             console.log("User logged in:", user.email);
-            // We call initGame() *after* we know the user's state
             initGame();
-            updateStatus('Logged in. Click any tile to begin.', 'text-green-400');
         } else {
             // User is signed out
             currentUser = null;
             userEmail = null;
             console.log("User logged out.");
-            // We still call initGame() so non-logged-in users can play
             initGame();
-            updateStatus('Click any tile to begin.', 'text-blue-400');
         }
         
         // Show the page now that auth is checked and game is ready
